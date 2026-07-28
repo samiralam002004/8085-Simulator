@@ -1,0 +1,6 @@
+{
+  "name": "8085 Microprocessor Simulator & Lab Trainer",
+  "description": "Interactive 8085 Microprocessor Simulator with ET-8085 Trainer Kit, Assembly Code Editor, Step-by-Step Debugger, Memory Visualizer, Flowchart Generator, and Guided Lab Experiments.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
