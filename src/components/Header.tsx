@@ -54,7 +54,8 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'memory', label: 'Memory', icon: Grid },
     { id: 'flowchart', label: 'Flowchart', icon: GitCommit },
     { id: 'labs', label: 'Lab Manual', icon: BookOpen },
-    { id: 'reference', label: 'Opcodes', icon: HelpCircle },
+    { id: 'reference', label: 'Opcodes', icon: Zap },
+    { id: 'help', label: 'Help', icon: HelpCircle },
   ];
 
   return (

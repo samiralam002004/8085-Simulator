@@ -13,6 +13,7 @@ import { FlowchartView } from './components/FlowchartView';
 import { LabExperiments } from './components/LabExperiments';
 import { AITutor } from './components/AITutor';
 import { MnemonicReference } from './components/MnemonicReference';
+import { HelpGuide } from './components/HelpGuide';
 
 export default function App() {
   const engineRef = useRef<Engine8085>(new Engine8085());
@@ -215,6 +216,9 @@ export default function App() {
 
         {/* VIEW 6: MNEMONICS & OPCODES REFERENCE HANDBOOK */}
         {activeView === 'reference' && <MnemonicReference />}
+
+        {/* VIEW 7: DIGITAL TRAINER KIT HELP GUIDE */}
+        {activeView === 'help' && <HelpGuide onGoToTrainer={() => setActiveView('trainer')} />}
 
         {/* AI Tutor Panel at bottom of page when in editor */}
         {activeView === 'editor' && (

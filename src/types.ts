@@ -77,4 +77,4 @@ export interface LabExperiment {
   trainerKitKeypadSteps: { step: number; action: string; display: string; note: string }[];
 }
 
-export type ViewMode = 'editor' | 'trainer' | 'debugger' | 'memory' | 'flowchart' | 'labs' | 'reference';
+export type ViewMode = 'editor' | 'trainer' | 'debugger' | 'memory' | 'flowchart' | 'labs' | 'reference' | 'help';

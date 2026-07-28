@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Engine8085 } from '../lib/8085Engine';
 import { Play, RotateCcw, HelpCircle, ChevronRight, Zap, CheckCircle, Lightbulb } from 'lucide-react';
+import { HelpGuide } from './HelpGuide';
 
 interface TrainerKitProps {
   engine: Engine8085;
@@ -17,6 +18,7 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
   const [currentReg, setCurrentReg] = useState<string>('A');
   const [message, setMessage] = useState<string>('ET-8085 Microprocessor Trainer Kit Ready');
   const [showGuide, setShowGuide] = useState<boolean>(false);
+  const [isExecFinished, setIsExecFinished] = useState<boolean>(false);
 
   // Audio tone generator for keypad click sound
   const playBeep = (freq: number = 800) => {
@@ -104,6 +106,7 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
     setMode('IDLE');
     setAddressInput('2000');
     setDataInput('00');
+    setIsExecFinished(false);
     setMessage('ET-8085 RESET - Ready');
     onStateChange();
   };
@@ -111,6 +114,7 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
   const handleExMem = () => {
     playBeep(700);
     setMode('EXMEM_ADDR');
+    setIsExecFinished(false);
     setMessage('EXMEM MODE: Enter 4-Digit Hex Address, then press NEXT');
   };
 
@@ -118,6 +122,7 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
     playBeep(700);
     setMode('EXREG');
     setCurrentReg('A');
+    setIsExecFinished(false);
     setDataInput(getRegValue('A'));
     setMessage('EXREG MODE: Select register or press NEXT to cycle registers');
   };
@@ -125,11 +130,13 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
   const handleGo = () => {
     playBeep(700);
     setMode('GO_ADDR');
+    setIsExecFinished(false);
     setMessage('GO MODE: Enter 4-Digit Hex Starting Address (e.g. 2000), then press EXEC');
   };
 
   const handleNext = () => {
     playBeep(850);
+    setIsExecFinished(false);
     if (mode === 'EXMEM_ADDR') {
       setMode('EXMEM_DATA');
       const val = engine.readMemory(currentAddressNum);
@@ -154,6 +161,7 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
 
   const handlePre = () => {
     playBeep(850);
+    setIsExecFinished(false);
     if (mode === 'EXMEM_DATA') {
       const preAddr = (currentAddressNum - 1) & 0xffff;
       const preAddrHex = preAddr.toString(16).toUpperCase().padStart(4, '0');
@@ -165,7 +173,7 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
 
   const handleExec = () => {
     playBeep(1200);
-    if (mode === 'GO_ADDR') {
+    if (mode === 'GO_ADDR' || mode === 'IDLE') {
       engine.state.pc = currentAddressNum;
       engine.state.isHalted = false;
       setMessage(`Executing code starting from Address ${addressInput}H...`);
@@ -175,18 +183,23 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
         engine.step();
         count++;
       }
+      setIsExecFinished(true);
       onStateChange();
-      setMessage(`Execution finished from ${addressInput}H (${count} steps executed)`);
+      setMessage(`Execution finished at PC: ${engine.state.pc.toString(16).toUpperCase()}H ('E' displayed on LED)`);
     }
   };
 
   const handleStep = () => {
     playBeep(1000);
     if (engine.state.isHalted) {
-      setMessage('CPU is HALTED. Press RESET to restart.');
+      setIsExecFinished(true);
+      setMessage('CPU is HALTED ("E" displayed). Press RESET to restart.');
       return;
     }
     const res = engine.step();
+    if (engine.state.isHalted) {
+      setIsExecFinished(true);
+    }
     onStateChange();
     setAddressInput(engine.state.pc.toString(16).toUpperCase().padStart(4, '0'));
     const curVal = engine.readMemory(engine.state.pc);
@@ -203,6 +216,9 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
   };
 
   const getDisplayDataText = () => {
+    if (isExecFinished) {
+      return ' E';
+    }
     if (mode === 'EXMEM_ADDR' || mode === 'GO_ADDR') {
       return '- -';
     }
@@ -236,31 +252,8 @@ export const TrainerKit: React.FC<TrainerKitProps> = ({ engine, onStateChange, s
 
       {/* Guide Modal / Card if enabled */}
       {showGuide && (
-        <div className="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-5 text-slate-200 text-xs space-y-3 animate-fadeIn">
-          <div className="flex items-center gap-2 font-bold text-amber-400 text-sm">
-            <CheckCircle className="w-4 h-4" />
-            <span>Step-by-Step College Lab Guide for ET-8085 Hardware Kit</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-            <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-              <span className="font-bold text-amber-300 block mb-1">1. Entering Opcodes to Memory</span>
-              <p className="text-slate-400 text-[11px] leading-relaxed">
-                Press <strong className="text-slate-200">RESET</strong> → <strong className="text-slate-200">EXMEM</strong> → Type Starting Address <strong className="text-amber-400">2000</strong> → Press <strong className="text-slate-200">NEXT</strong> → Type Opcode Hex (e.g. <strong className="text-amber-400">3E</strong>) → Press <strong className="text-slate-200">NEXT</strong> to advance address!
-              </p>
-            </div>
-            <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-              <span className="font-bold text-amber-300 block mb-1">2. Executing Your Program</span>
-              <p className="text-slate-400 text-[11px] leading-relaxed">
-                Press <strong className="text-slate-200">RESET</strong> → Press <strong className="text-slate-200">GO</strong> → Type Address <strong className="text-amber-400">2000</strong> → Press <strong className="text-slate-200">EXEC</strong>. The program will run automatically until <strong className="text-red-400">HLT (76H)</strong>.
-              </p>
-            </div>
-            <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-              <span className="font-bold text-amber-300 block mb-1">3. Checking Output & Registers</span>
-              <p className="text-slate-400 text-[11px] leading-relaxed">
-                Press <strong className="text-slate-200">EXMEM</strong> → Type output memory address (e.g. <strong className="text-amber-400">2052</strong>) → Press <strong className="text-slate-200">NEXT</strong> to inspect result! Or press <strong className="text-slate-200">EXREG</strong> to examine CPU registers A, B, C, etc.
-              </p>
-            </div>
-          </div>
+        <div className="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 text-slate-200 text-xs shadow-xl animate-fadeIn">
+          <HelpGuide />
         </div>
       )}
 

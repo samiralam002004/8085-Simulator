@@ -17,7 +17,14 @@ async function startServer() {
       if (!apiKey) {
         return res.status(400).json({ error: "GEMINI_API_KEY environment variable is not configured." });
       }
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
+      });
       const prompt = `You are an expert 8085 Microprocessor Professor and Lab Instructor.
 The student is asking: ${question || 'Explain this assembly code step-by-step and identify any bugs or logic improvements.'}
 
@@ -29,7 +36,7 @@ ${code}
 Provide a clear, easy-to-understand explanation in Hinglish/English with key register states, memory flow, and practical tips for ET-8085 trainer kit lab submission.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.6-flash',
         contents: prompt,
       });
 
